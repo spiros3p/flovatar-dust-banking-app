@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.858374bb.css",
-    "main.js": "/static/js/main.6cab8e21.js",
-    "index.html": "/index.html",
-    "main.858374bb.css.map": "/static/css/main.858374bb.css.map",
-    "main.6cab8e21.js.map": "/static/js/main.6cab8e21.js.map"
+    "main.css": "/flovatar-dust-banking-app/static/css/main.858374bb.css",
+    "main.js": "/flovatar-dust-banking-app/static/js/main.6cab8e21.js",
+    "index.html": "/flovatar-dust-banking-app/index.html",
+    "main.858374bb.css.map": "/flovatar-dust-banking-app/static/css/main.858374bb.css.map",
+    "main.6cab8e21.js.map": "/flovatar-dust-banking-app/static/js/main.6cab8e21.js.map"
   },
   "entrypoints": [
     "static/css/main.858374bb.css",

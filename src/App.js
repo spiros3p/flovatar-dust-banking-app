@@ -272,7 +272,7 @@ function App() {
         <nav className="navbar navbar-expand-lg bg-body-tertiary custom-navbar">
           <div className="container-fluid">
             <a className="navbar-brand" href="/">
-              Dust Lender
+              Dust Lender (TestNet)
             </a>
             {!user.loggedIn && (
               <button

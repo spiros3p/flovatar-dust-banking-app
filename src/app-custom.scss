@@ -1,0 +1,72 @@
+.custom-navbar {
+  margin-bottom: 5px;
+  margin-top: 10px;
+  border-radius: 6px;
+}
+
+.column-container {
+  border-radius: 6px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+//   padding-bottom: 10px;
+  min-height: 100%;
+
+  &.inventory {
+    background-color: rgba(131, 255, 131, 0.6);
+  }
+  &.collateralized {
+    background-color: rgba(255, 255, 82, 0.6);
+  }
+}
+
+.badge-bar {
+    display: flex;
+}
+
+.card-custom{
+    max-width: 200px;
+}
+
+.dust-amount {
+  font-weight: bold;
+}
+
+.input-days {
+    max-width: 30px;
+    margin: 0 4px;
+    text-align: center;
+}
+
+.dust-to-receive {
+    font-size: 12px;
+}
+
+.dust-to-receive-amount {
+    font-weight: bold;
+    height: 19px;
+    display: inline-block;
+}
+
+.collateral-options {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: space-around;
+  min-height: 48px;
+
+  & .title-small{
+    font-size: 11px;
+  }
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}

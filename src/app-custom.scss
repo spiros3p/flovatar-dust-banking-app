@@ -24,6 +24,15 @@
     flex-wrap: wrap;
 }
 
+.status-bar {
+  // background-color: rgb(13, 110, 253);
+  border-radius: 6px;
+  color: white;
+  // min-height: 42px;
+  // padding: 10px 10px;
+  font-weight: 500;
+}
+
 .card-custom{
     max-width: 200px;
 }

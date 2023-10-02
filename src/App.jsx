@@ -10,6 +10,9 @@ import { getMaxDaysOfLendingScript } from "./cadence/scripts/getMaxDaysOfLending
 import { getUserCollateralScript } from "./cadence/scripts/getUserCollateral.js";
 import { depositCollateralTrx } from "./cadence/transactions/depositCollateral.js";
 import { retrieveCollateralTrx } from "./cadence/transactions/retrieveCollateral.js";
+import logo from "./resources/icons/logo512.png";
+// import { ToasterBootstrap } from "./components/toaster-bootstrap/toaster-bootstrap";
+import Spinner from "react-bootstrap/Spinner";
 
 fcl.config({
   // "accessNode.api": "https://rest-mainnet.onflow.org", //mainnet
@@ -18,6 +21,21 @@ fcl.config({
   "discovery.wallet": "https://fcl-discovery.onflow.org/testnet/authn",
   "0xProfile": "0x1829e3193c654852", // DustLender TestNet
 });
+
+const STATUS = {
+  executed: "EXECUTED",
+  sealed: "SEALED",
+  pending: "PENDING",
+};
+
+const COLORS = {
+  blue: "#0d6efd",
+  red: "#dc3545",
+  green: "#198754",
+  grey: "#6c757d",
+};
+
+const HIDE_TIMER = 4000; //ms
 
 function App() {
   const [daysForEachFlovInWallet, setDaysForEachFlovInWallet] = useState({});
@@ -28,23 +46,28 @@ function App() {
   const [maxDays, setMaxDays] = useState(); // fetch from DustLender contract
   const [bankBalance, setBankBalance] = useState(); // fetch from DustLender contract
   const [serviceFee, setServiceFee] = useState(); // fetch from DustLender contract
+  const [showStatusBar, setShowStatusBar] = useState(false);
+  const [textStatusBar, setTextStatusBar] = useState("");
+  const [statusBarColor, setStatusBarColor] = useState("");
+  const [showSpinner, setShowSpinner] = useState(true);
+  const [btnsDisabled, setBtnsDisabled] = useState(false);
 
   useEffect(() => {
     fcl.currentUser.subscribe(setUser);
-    getBankBalance()
-    getMaxDays()
-    getServiceFee()
+    getBankBalance();
+    getMaxDays();
+    getServiceFee();
   }, []);
 
   useEffect(() => {
     if (Object.keys(user).length && user.addr) {
       getUserNFTs();
       getUserCollaterals();
-      getUserDustBalance()
+      getUserDustBalance();
     } else {
-      setUserCollateralInventory([])
-      setUserDustBalance()
-      setUserFlovatarInventory([])
+      setUserCollateralInventory([]);
+      setUserDustBalance();
+      setUserFlovatarInventory([]);
     }
   }, [user]);
 
@@ -53,49 +76,49 @@ function App() {
       const result = await fcl.query({
         cadence: getServiceFeeScript,
       });
-      console.log(result);
+      // console.log(result);
       setServiceFee(result);
     } catch (e) {
       console.error(e);
     }
-  }
- 
+  };
+
   const getUserDustBalance = async () => {
     try {
       const result = await fcl.query({
         cadence: getUserDustBalanceScript,
         args: (arg, t) => [arg(user.addr, t.Address)],
       });
-      console.log(result);
+      // console.log(result);
       setUserDustBalance(result);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
   const getBankBalance = async () => {
     try {
       const result = await fcl.query({
         cadence: getBankBalanceScript,
       });
-      console.log(result);
+      // console.log(result);
       setBankBalance(result);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
   const getMaxDays = async () => {
     try {
       const result = await fcl.query({
         cadence: getMaxDaysOfLendingScript,
       });
-      console.log(result);
+      // console.log(result);
       setMaxDays(result);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
   const calculateServiceFee = () => `${serviceFee * 100}%`;
 
@@ -134,8 +157,8 @@ function App() {
 
   const depositCollateral = async (id) => {
     const days = daysForEachFlovInWallet[id];
-    console.log(id);
-    console.log(days);
+    // console.log(id);
+    // console.log(days);
     if (daysForEachFlovInWallet[id] <= 0) return;
     try {
       const result = await fcl.mutate({
@@ -146,16 +169,14 @@ function App() {
         authorizations: [fcl.authz],
         limit: 9999,
       });
-      console.log(result);
-      await getUserNFTs();
-      await getUserCollaterals();
+      await subToTrx(result);
     } catch (e) {
       console.error(e);
     }
   };
 
   const retrieveCollateral = async (id) => {
-    console.log(id);
+    // console.log(id);
     try {
       const result = await fcl.mutate({
         cadence: retrieveCollateralTrx,
@@ -165,13 +186,64 @@ function App() {
         authorizations: [fcl.authz],
         limit: 9999,
       });
-      console.log(result);
-      await getUserNFTs();
-      await getUserCollaterals();
+      await subToTrx(result);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
+
+  const subToTrx = async (result) => {
+    setBtnsDisabled(true);
+    setShowStatusBar(true);
+    setShowSpinner(true);
+    setStatusBarColor(COLORS.blue);
+    setTextStatusBar("Sending Transaction...");
+    let trxDone = false;
+
+    fcl.tx(result).subscribe(
+      (res) => {
+        console.log(res);
+        if (trxDone) return;
+        if (!!res.errorMessage) {
+          setShowStatusBar(true);
+          setShowSpinner(false);
+          setStatusBarColor(COLORS.red);
+          setTextStatusBar(res.errorMessage);
+          setBtnsDisabled(false);
+          setTimeout(() => {
+            setShowStatusBar(false);
+          }, HIDE_TIMER * 4);
+          trxDone = true;
+        } else if (res.statusString === STATUS.pending) {
+          setShowStatusBar(true);
+          setShowSpinner(true);
+          setStatusBarColor(COLORS.grey);
+          setTextStatusBar("Pending status...");
+        } else if (res.statusString === STATUS.executed) {
+          setShowStatusBar(true);
+          setShowSpinner(true);
+          setStatusBarColor(COLORS.blue);
+          setTextStatusBar("Transaction executed... Waiting for sealing...");
+        } else if (res.statusString === STATUS.sealed) {
+          setShowStatusBar(true);
+          setShowSpinner(false);
+          setStatusBarColor(COLORS.green);
+          setTextStatusBar("Transaction SEALED");
+          setBtnsDisabled(false);
+          setTimeout(() => {
+            setShowStatusBar(false);
+          }, HIDE_TIMER);
+          trxDone = true;
+          getUserNFTs();
+          getUserCollaterals();
+          getBankBalance();
+        }
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
+  };
 
   const renderFlovatarList = (flovatarList = [], collateralColumn = false) => {
     return flovatarList.map((flov, index) => (
@@ -241,6 +313,7 @@ function App() {
                 className="btn btn-outline-dark w-100"
                 onClick={() => depositCollateral(flov.flovatar.id)}
                 disabled={
+                  btnsDisabled ||
                   !daysForEachFlovInWallet[flov.flovatar.id] ||
                   daysForEachFlovInWallet[flov.flovatar.id] <= 0
                 }
@@ -252,9 +325,11 @@ function App() {
                 className="btn btn-outline-dark w-100"
                 onClick={() => retrieveCollateral(flov.flovatar.id)}
                 disabled={
+                  btnsDisabled ||
                   !flov.claimableInfo ||
                   Number(flov.collateralInfo.dustAmountToClaim) -
-                    Number(flov.claimableInfo?.amount) >= 0
+                    Number(flov.claimableInfo?.amount) >
+                    0
                 }
               >
                 RETRIEVE
@@ -272,7 +347,15 @@ function App() {
         <nav className="navbar navbar-expand-lg bg-body-tertiary custom-navbar">
           <div className="container-fluid">
             <a className="navbar-brand" href="/">
-              Dust Lender (TestNet)
+              <img
+                src={logo}
+                alt="flovatar-logo"
+                width="28"
+                height="28"
+                className="me-2"
+                style={{ verticalAlign: "sub" }}
+              />
+              <b>Dust Lender (TestNet)</b>
             </a>
             {!user.loggedIn && (
               <button
@@ -296,12 +379,44 @@ function App() {
         </nav>
         {/* make it chips */}
         <div className="badge-bar my-2 gap-2">
-          <span className="badge text-bg-success">Wallet Balance: {!!userDustBalance ? Number(userDustBalance).toFixed(3): '-'} $DUST</span>
-          <span className="badge text-bg-primary">Service Balance: {Number(bankBalance).toFixed(3)} $DUST</span>
-          <span className="badge text-bg-primary">Service fee: {calculateServiceFee()}</span>
-          <span className="badge text-bg-primary">Max Days of Lending: {maxDays}</span>
+          <span className="badge text-bg-success">
+            Wallet Balance:{" "}
+            {!!userDustBalance ? Number(userDustBalance).toFixed(3) : "-"} $DUST
+          </span>
+          <span className="badge text-bg-primary">
+            Service Balance: {Number(bankBalance).toFixed(3)} $DUST
+          </span>
+          <span className="badge text-bg-primary">
+            Service fee: {calculateServiceFee()}
+          </span>
+          <span className="badge text-bg-primary">
+            Max Days of Lending: {maxDays}
+          </span>
         </div>
       </div>
+
+      {/* {showStatusBar && ( */}
+      <div
+        className="status-bar"
+        style={{
+          opacity: showStatusBar ? "1" : "0",
+          height: showStatusBar ? "100%" : "0",
+          padding: showStatusBar ? "10px" : "0",
+          minHeight: showStatusBar ? "42px" : "0",
+          backgroundColor: statusBarColor,
+          transition: "all 0.6s",
+        }}
+      >
+        {showSpinner && (
+          <Spinner animation="border" role="status" size="sm">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        )}
+        <span className="ms-2" style={{ verticalAlign: "top" }}>
+          {textStatusBar}
+        </span>
+      </div>
+      {/* )} */}
 
       <div className="row">
         <div className="col-lg-6 px-1 my-2">

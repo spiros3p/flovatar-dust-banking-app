@@ -61,8 +61,8 @@ function App() {
     getBankBalance();
     getMaxDays();
     getServiceFee();
-    getTotalAmountOwed()
-    getNoOfNFTsInCollateral()
+    getTotalAmountOwed();
+    getNoOfNFTsInCollateral();
   }, []);
 
   useEffect(() => {
@@ -267,8 +267,9 @@ function App() {
           getUserNFTs();
           getUserCollaterals();
           getBankBalance();
-          getTotalAmountOwed()
-          getNoOfNFTsInCollateral()
+          getTotalAmountOwed();
+          getNoOfNFTsInCollateral();
+          getUserDustBalance();
         }
       },
       (error) => {

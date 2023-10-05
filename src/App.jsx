@@ -5,6 +5,8 @@ import * as fcl from "@onflow/fcl";
 import { getUserNFTsScript } from "./cadence/scripts/getUserNFTs.js";
 import { getBankBalanceScript } from "./cadence/scripts/getBankBalance.js";
 import { getServiceFeeScript } from "./cadence/scripts/getServiceFee.js";
+import { getTotalAmountOwedScript } from "./cadence/scripts/getTotalAmountOwed.js";
+import { getNoOfNFTsInCollateralScript } from "./cadence/scripts/getNoOfNFTsInCollateral.js";
 import { getUserDustBalanceScript } from "./cadence/scripts/getUserDustBalance.js";
 import { getMaxDaysOfLendingScript } from "./cadence/scripts/getMaxDaysOfLending.js";
 import { getUserCollateralScript } from "./cadence/scripts/getUserCollateral.js";
@@ -46,17 +48,21 @@ function App() {
   const [maxDays, setMaxDays] = useState(); // fetch from DustLender contract
   const [bankBalance, setBankBalance] = useState(); // fetch from DustLender contract
   const [serviceFee, setServiceFee] = useState(); // fetch from DustLender contract
+  const [totalAmountOwed, setTotalAmountOwed] = useState(); // fetch from DustLender contract
   const [showStatusBar, setShowStatusBar] = useState(false);
   const [textStatusBar, setTextStatusBar] = useState("");
   const [statusBarColor, setStatusBarColor] = useState("");
   const [showSpinner, setShowSpinner] = useState(true);
   const [btnsDisabled, setBtnsDisabled] = useState(false);
+  const [collateralizedNFTs, setCollateralizedNFTs] = useState(0);
 
   useEffect(() => {
     fcl.currentUser.subscribe(setUser);
     getBankBalance();
     getMaxDays();
     getServiceFee();
+    getTotalAmountOwed()
+    getNoOfNFTsInCollateral()
   }, []);
 
   useEffect(() => {
@@ -78,6 +84,30 @@ function App() {
       });
       // console.log(result);
       setServiceFee(result);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const getNoOfNFTsInCollateral = async () => {
+    try {
+      const result = await fcl.query({
+        cadence: getNoOfNFTsInCollateralScript,
+      });
+      // console.log(result);
+      setCollateralizedNFTs(result);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const getTotalAmountOwed = async () => {
+    try {
+      const result = await fcl.query({
+        cadence: getTotalAmountOwedScript,
+      });
+      // console.log(result);
+      setTotalAmountOwed(result);
     } catch (e) {
       console.error(e);
     }
@@ -237,6 +267,8 @@ function App() {
           getUserNFTs();
           getUserCollaterals();
           getBankBalance();
+          getTotalAmountOwed()
+          getNoOfNFTsInCollateral()
         }
       },
       (error) => {
@@ -391,6 +423,12 @@ function App() {
           </span>
           <span className="badge text-bg-primary">
             Max Days of Lending: {maxDays}
+          </span>
+          <span className="badge text-bg-primary">
+            Amount Loaned: {Number(totalAmountOwed) * 0.95}
+          </span>
+          <span className="badge text-bg-primary">
+            Collateralized NFTs: {collateralizedNFTs}
           </span>
         </div>
       </div>

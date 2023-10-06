@@ -426,7 +426,7 @@ function App() {
             Max Days of Lending: {maxDays}
           </span>
           <span className="badge text-bg-primary">
-            Amount Loaned: {Number(totalAmountOwed) * 0.95}
+            Amount Loaned: {(Number(totalAmountOwed) * 0.95).toFixed(3)}
           </span>
           <span className="badge text-bg-primary">
             Collateralized NFTs: {collateralizedNFTs}
